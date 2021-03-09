@@ -5,6 +5,11 @@ TagManager:
   serializedVersion: 2
   tags:
   - PickUp
+  - Ramp
+  - Bounds
+  - JumpPad
+  - FinalCube
+  - Platform
   layers:
   - Default
   - TransparentFX

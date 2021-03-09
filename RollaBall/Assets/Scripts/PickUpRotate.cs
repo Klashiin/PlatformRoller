@@ -4,8 +4,10 @@ using UnityEngine;
 
 public class PickUpRotate : MonoBehaviour
 {
-    void Update()
+    private Vector3 angle = new Vector3(15, 40, 40);
+
+    void FixedUpdate()
     {
-        transform.Rotate(new Vector3(20, 40, 45) * Time.deltaTime);
+        transform.Rotate(angle * Time.deltaTime, Space.World);
     }
 }

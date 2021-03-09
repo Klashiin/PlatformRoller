@@ -3,25 +3,33 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using TMPro;
-using System;
+using UnityEngine.SceneManagement;
 
 public class PlayerController : MonoBehaviour
 {
     public float speed;
     public TextMeshProUGUI score;
     public GameObject stageClearObj;
+    public GameObject ramp;
+    public GameObject infotext;
+    public GameObject finalcube;
 
     private Rigidbody rb;
     private float X;
     private float Y;
-    private int pickupCount;
+    private bool isMoving = true;
+    private int pickupCount = 0;
+    private int rampGoal = 2;
 
-    void Start()
+    void Awake()
     {
         rb = GetComponent<Rigidbody>();
         pickupCount = 0;
         score.SetText($"Score: {pickupCount}");
         stageClearObj.SetActive(false);
+        ramp.SetActive(false);
+        infotext.GetComponent<TextMesh>().text = $"COLLECT {rampGoal}";
+        infotext.SetActive(true);
     }
 
     private void FixedUpdate()
@@ -32,9 +40,12 @@ public class PlayerController : MonoBehaviour
 
     private void OnMove(InputValue mv)
     {
-        Vector2 v2 = mv.Get<Vector2>();
-        X = v2.x;
-        Y = v2.y;
+        if (isMoving)
+        {
+            Vector2 v2 = mv.Get<Vector2>();
+            X = v2.x;
+            Y = v2.y;
+        }
     }
 
     private void OnTriggerEnter(Collider other)
@@ -44,11 +55,34 @@ public class PlayerController : MonoBehaviour
             other.gameObject.SetActive(false);
             pickupCount++;
             score.SetText($"Score: {pickupCount}");
-            if(pickupCount >= 4)
+            infotext.GetComponent<TextMesh>().text = $"COLLECT {rampGoal - pickupCount}";
+            if (pickupCount >= rampGoal)
             {
-                stageClearObj.SetActive(true);
+                infotext.SetActive(false);
+                ramp.SetActive(true);
             }
         }
+        else if (other.gameObject.tag == "Bounds")
+        {
+            SceneManager.LoadScene(0);
+        }
+        else if (other.gameObject.tag == "JumpPad")
+        {
+            Jump();
+        }
+        else if (other.gameObject.tag == "FinalCube")
+        {
+            StageClear();
+        }
+    }
+    void StageClear()
+    {
+        stageClearObj.SetActive(true);
+        isMoving = false;
+        speed = 2;
+    }
+    void Jump()
+    {
+        rb.AddForce(new Vector3(0, 40, 0) * speed);
     }
 }
-
