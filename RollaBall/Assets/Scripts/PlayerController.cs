@@ -19,7 +19,7 @@ public class PlayerController : MonoBehaviour
     private float Y;
     private bool isMoving = true;
     private int pickupCount = 0;
-    private int rampGoal = 2;
+    private int rampGoal = 100;
 
     void Awake()
     {
@@ -66,10 +66,6 @@ public class PlayerController : MonoBehaviour
         {
             SceneManager.LoadScene(0);
         }
-        else if (other.gameObject.tag == "JumpPad")
-        {
-            Jump();
-        }
         else if (other.gameObject.tag == "FinalCube")
         {
             StageClear();
@@ -80,9 +76,5 @@ public class PlayerController : MonoBehaviour
         stageClearObj.SetActive(true);
         isMoving = false;
         speed = 2;
-    }
-    void Jump()
-    {
-        rb.AddForce(new Vector3(0, 40, 0) * speed);
     }
 }

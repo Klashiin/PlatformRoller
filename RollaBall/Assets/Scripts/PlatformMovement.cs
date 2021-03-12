@@ -11,9 +11,10 @@ public class PlatformMovement : MonoBehaviour
     private Vector3 starting, current, final;
     private float wait;
     private bool isMoving;
-    private bool moveOnTrigger;
+    private bool moveOnTrigger = false;
     private GameObject player;
     private bool stopMoving = false;
+    private bool playerColl;
 
     void Awake()
     {
@@ -26,22 +27,25 @@ public class PlatformMovement : MonoBehaviour
 
     void FixedUpdate()
     {
-        if (!stopMoving)
+        if (!stopMoving && !isTrigger)
         {
-            if (isTrigger == false)
+            isMoving = true;
+            Move(distance);
+            Loop();
+        }
+        else
+        {
+            if (!stopMoving && moveOnTrigger && Time.time >= wait + 0.5f)
             {
                 isMoving = true;
                 Move(distance);
                 Loop();
             }
-            else
+            else if (!playerColl && stopMoving)
             {
-                if (moveOnTrigger && Time.time >= wait + 0.5)
-                {
-                    isMoving = true;
-                    Move(distance);
-                    Loop();
-                }
+                stopMoving = false;
+                Reverse();
+                Move(distance);
             }
         }
     }
@@ -55,26 +59,30 @@ public class PlatformMovement : MonoBehaviour
         }
     }
 
-    void OnTriggerExit(Collider other)
+    void OnCollisionStay(Collision other)
     {
-        if (other.tag == "Player" && isTrigger && moveOnTrigger)
+        if (other.gameObject.tag == "Player")
         {
-            stopMoving = false;
+            playerColl = true;
+            if (isMoving)
+            {
+                player = other.gameObject;
+                player.transform.Translate(distance / speed * Time.deltaTime, Space.World);
+                player.GetComponent<Rigidbody>().angularDrag += 0.4f;
+            }
         }
     }
 
-    void OnCollisionStay(Collision other)
+    void OnCollisionExit(Collision other)
     {
-        if (other.gameObject.tag == "Player" && isMoving)
+        if (other.gameObject.tag == "Player")
         {
-            player = other.gameObject;
-            player.transform.Translate(distance / speed * Time.deltaTime, Space.World);
-            player.GetComponent<Rigidbody>().angularDrag += 0.4f;
-        }
-        else if (other.gameObject.tag == "Player" && !isMoving)
-        {
-            player = other.gameObject;
-            player.GetComponent<Rigidbody>().angularDrag -= 0.4f;
+            playerColl = false;
+            if (!isMoving)
+            {
+                player = other.gameObject;
+                player.GetComponent<Rigidbody>().angularDrag -= 0.4f;
+            }
         }
     }
 
@@ -88,32 +96,38 @@ public class PlatformMovement : MonoBehaviour
     {
         if (isTrigger == false)
         {
-            if (current.x >= final.x) { ReverseCheck(); }
-            if (current.y >= final.y) { ReverseCheck(); }
-            if (current.z >= final.z) { ReverseCheck(); }
-
-            if (current.x <= starting.x) { ReverseCheck(); }
-            if (current.y <= starting.y) { ReverseCheck(); }
-            if (current.z <= starting.z) { ReverseCheck(); }
+            if (final.x + final.y + final.z > starting.x + starting.y + starting.z)
+            {
+                if (current.x + current.y + current.z > final.x + final.y + final.z) { Reverse(); }
+                if (current.x + current.y + current.z < starting.x + starting.y + starting.z) { Reverse(); }
+            }
+            else
+            {
+                if (current.x + current.y + current.z < final.x + final.y + final.z) { Reverse(); }
+                if (current.x + current.y + current.z > starting.x + starting.y + starting.z) { Reverse(); }
+            }
         }
         else
         {
-            if (current.x < final.x) { StopCheck(); }
-            if (current.y < final.y) { StopCheck(); }
-            if (current.z < final.z) { StopCheck(); }
-
-            // if (current.x <= starting.x) { ReverseCheck(); }
-            // if (current.y <= starting.y) { ReverseCheck(); }
-            // if (current.z <= starting.z) { ReverseCheck(); }
+            if (final.x + final.y + final.z > starting.x + starting.y + starting.z)
+            {
+                if (current.x + current.y + current.z >= final.x + final.y + final.z) { Stop(); }
+                if (current.x + current.y + current.z <= starting.x + starting.y + starting.z) { Stop(); moveOnTrigger = false; }
+            }
+            else
+            {
+                if (current.x + current.y + current.z <= final.x + final.y + final.z) { Stop(); }
+                if (current.x + current.y + current.z >= starting.x + starting.y + starting.z) { Stop(); moveOnTrigger = false; }
+            }
         }
     }
 
-    void ReverseCheck()
+    void Reverse()
     {
         speed = -speed;
     }
 
-    void StopCheck()
+    void Stop()
     {
         stopMoving = true;
         isMoving = false;
